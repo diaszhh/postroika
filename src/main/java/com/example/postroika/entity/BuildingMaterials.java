@@ -36,4 +36,7 @@ public class BuildingMaterials {
     @Column(nullable = false)
     private BigDecimal price;
 
+    @Column(name = "stock_quantity", nullable = false)
+    private BigDecimal stockQuantity;
+
 }

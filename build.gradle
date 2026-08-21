@@ -17,6 +17,11 @@ java {
 repositories {
     mavenCentral()
 }
+
+configurations {
+    jaxb
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-session-data-redis'
@@ -24,7 +29,17 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 
+    implementation 'org.springframework.boot:spring-boot-starter-web-services'
+    implementation 'wsdl4j:wsdl4j'
+
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api'
+    runtimeOnly 'org.glassfish.jaxb:jaxb-runtime'
+
+    jaxb 'org.glassfish.jaxb:jaxb-xjc:4.0.5'
+    jaxb 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
+
     implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.postgresql:postgresql'
@@ -37,9 +52,42 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-session-data-redis-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-thymeleaf-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+
     testCompileOnly 'org.projectlombok:lombok'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+def generatedJaxbDir = layout.buildDirectory.dir('generated/sources/xjc/main')
+
+tasks.register('generateJaxb', JavaExec) {
+    group = 'build'
+    description = 'Generates JAXB classes from XSD'
+
+    classpath = configurations.jaxb
+    mainClass = 'com.sun.tools.xjc.XJCFacade'
+
+    args(
+            '-d', generatedJaxbDir.get().asFile.absolutePath,
+            '-p', 'com.example.postroika.soap.materials',
+            'src/main/resources/xsd/materials.xsd'
+    )
+
+    doFirst {
+        generatedJaxbDir.get().asFile.mkdirs()
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir generatedJaxbDir
+        }
+    }
+}
+
+tasks.named('compileJava') {
+    dependsOn tasks.named('generateJaxb')
 }
 
 tasks.named('test') {

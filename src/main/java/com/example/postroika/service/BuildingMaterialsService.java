@@ -2,10 +2,14 @@ package com.example.postroika.service;
 
 import com.example.postroika.dto.BuildingMaterialsDto;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import com.example.postroika.entity.BuildingMaterials;
+import com.example.postroika.dto.MaterialAvailabilityDto;
+
+import java.math.BigDecimal;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import com.example.postroika.mapper.BuildingMaterialsMapper;
 import com.example.postroika.repository.BuildingMaterialsRepository;
 import lombok.RequiredArgsConstructor;
@@ -53,5 +57,44 @@ public class BuildingMaterialsService {
     @CacheEvict(value = "buildingMaterials", allEntries = true)
     public void delete(Long id) {
         buildingMaterialsRepository.deleteById(id);
+    }
+
+    public MaterialAvailabilityDto checkAvailability(Long materialId, BigDecimal requestedQuantity) {
+        if (materialId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID материала не должен быть пустым");
+        }
+
+        if (requestedQuantity == null || requestedQuantity.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Запрашиваемое количество должно быть больше 0");
+        }
+
+        return buildingMaterialsRepository
+                .findById(materialId)
+                .map(material -> {
+                    BigDecimal stockQuantity = material.getStockQuantity();
+
+                    if (stockQuantity == null) {
+                        stockQuantity = BigDecimal.ZERO;
+                    }
+
+                    boolean available = stockQuantity.compareTo(requestedQuantity) >= 0;
+
+                    return MaterialAvailabilityDto.builder()
+                            .materialId(material.getId())
+                            .name(material.getName())
+                            .unit(material.getUnit())
+                            .requestedQuantity(requestedQuantity)
+                            .availableQuantity(stockQuantity)
+                            .available(available)
+                            .message(available ? "Материал доступен" : "Недостаточно материала на складе")
+                            .build();
+                })
+                .orElseGet(() -> MaterialAvailabilityDto.builder()
+                        .materialId(materialId)
+                        .requestedQuantity(requestedQuantity)
+                        .availableQuantity(BigDecimal.ZERO)
+                        .available(false)
+                        .message("Материал не найден")
+                        .build());
     }
 }

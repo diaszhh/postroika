@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope
+        xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+        xmlns:mat="http://postroika.example.com/soap/materials">
+
+    <soapenv:Header/>
+
+    <soapenv:Body>
+        <mat:CheckMaterialAvailabilityRequest>
+            <mat:materialId>1</mat:materialId>
+            <mat:requestedQuantity>10</mat:requestedQuantity>
+        </mat:CheckMaterialAvailabilityRequest>
+    </soapenv:Body>
+
+</soapenv:Envelope>
