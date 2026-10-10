@@ -1,0 +1,30 @@
+# Override для практической работы по Docker.
+# Запуск: docker compose -f docker-compose.yml -f docker-compose.lab.yml up -d
+services:
+  postgres:
+    # 5432 на хосте занят локальным PostgreSQL, поэтому прокидываем на 5433
+    ports: !override
+      - "5433:5432"
+    # Логи postgres пишутся в общий волюм
+    command: >
+      postgres
+      -c logging_collector=on
+      -c log_directory=/shared/logs/postgres
+      -c log_filename=postgresql.log
+      -c log_statement=all
+      -c log_connections=on
+    volumes:
+      - shared:/shared
+
+  redis:
+    # Логи redis пишутся в общий волюм
+    command: redis-server --appendonly yes --logfile /shared/logs/redis/redis.log
+    tmpfs:
+      - /cache:size=64m,mode=1777
+    volumes:
+      - shared:/shared
+
+volumes:
+  shared:
+    external: true
+    name: postroika_shared
