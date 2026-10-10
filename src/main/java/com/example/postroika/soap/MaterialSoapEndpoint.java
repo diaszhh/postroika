@@ -1,4 +1,4 @@
-package com.example.postroika.soap.endpoint;
+package com.example.postroika.soap;
 
 import com.example.postroika.dto.MaterialAvailabilityDto;
 import com.example.postroika.service.BuildingMaterialsService;

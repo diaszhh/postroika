@@ -23,10 +23,12 @@ public class Customer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Точно такое же связующее поле
+    @Column(name = "keycloak_id", unique = true, nullable = false)
+    private String keycloakId;
+
     @Column(nullable = false)
     private String name;
-
     private String email;
-
     private String phone;
 }

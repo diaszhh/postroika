@@ -23,12 +23,12 @@ public class Client {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "keycloak_id", unique = true, nullable = false)
+    private String keycloakId;
+
     @Column(nullable = false)
     private String firstName;
-
     private String lastName;
-
     private String email;
-
     private String phone;
 }

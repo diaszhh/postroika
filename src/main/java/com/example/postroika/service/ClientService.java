@@ -4,7 +4,9 @@ import com.example.postroika.dto.ClientDto;
 import com.example.postroika.entity.Client;
 import com.example.postroika.mapper.ClientMapper;
 import com.example.postroika.repository.ClientRepository;
+
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -51,4 +53,26 @@ public class ClientService {
         }
         repository.deleteById(id);
     }
+
+    // Поиск профиля по Keycloak ID
+    public ClientDto findByKeycloakId(String keycloakId) {
+        Client client = repository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return mapper.toDto(client);
+    }
+
+    // Создание записи в локальной БД при первой авторизации
+    public ClientDto createWithKeycloak(ClientDto dto, String keycloakId) {
+        // Проверяем, возможно этот пользователь уже создавал запись у нас в БД
+        if (repository.findByKeycloakId(keycloakId).isPresent()) {
+            throw new IllegalStateException("Локальный профиль для этого пользователя уже существует");
+        }
+
+        Client client = mapper.toEntity(dto);
+        client.setKeycloakId(keycloakId); // Принудительно сетим ID из токена Keycloak
+
+        Client saved = repository.save(client);
+        return mapper.toDto(saved);
+    }
+
 }
